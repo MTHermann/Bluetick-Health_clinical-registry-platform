@@ -33,6 +33,8 @@ type Hospital = {
   id: string;
   name: string;
   countryId: string;
+  latitude?: number;
+  longitude?: number;
 };
 
 type Department = {
@@ -472,6 +474,10 @@ export default function ClinicalRegistry() {
           border-radius: 10px;
 
           padding: 25px;
+
+          max-height: 90vh;
+
+          overflow-y: auto;
         }
 
         .modal-header {
@@ -491,6 +497,68 @@ export default function ClinicalRegistry() {
           background: transparent;
 
           font-size: 24px;
+        }
+
+        .geo-instructions {
+          background: #e8f4f8;
+
+          border: 1px solid #87c8e0;
+
+          border-radius: 6px;
+
+          padding: 12px;
+
+          margin-bottom: 15px;
+
+          font-size: 13px;
+
+          color: #1a5f7f;
+
+          line-height: 1.5;
+        }
+
+        .geo-inputs {
+          display: grid;
+
+          grid-template-columns: 1fr 1fr;
+
+          gap: 10px;
+        }
+
+        .location-badge {
+          background: #e8f4f8;
+
+          border: 1px solid #87c8e0;
+
+          border-radius: 4px;
+
+          padding: 6px 8px;
+
+          font-size: 12px;
+
+          color: #1a5f7f;
+        }
+
+        .map-container {
+          background: #f0f0f0;
+
+          border: 1px solid #ddd;
+
+          border-radius: 6px;
+
+          height: 300px;
+
+          display: flex;
+
+          align-items: center;
+
+          justify-content: center;
+
+          font-size: 14px;
+
+          color: #666;
+
+          margin: 15px 0;
         }
 
         @media(max-width: 900px) {
@@ -519,6 +587,10 @@ export default function ClinicalRegistry() {
           }
 
           .metrics {
+            grid-template-columns: 1fr;
+          }
+
+          .geo-inputs {
             grid-template-columns: 1fr;
           }
 
@@ -742,7 +814,9 @@ export default function ClinicalRegistry() {
 
           {section ===
             "analytics" && (
-            <Analytics />
+            <Analytics
+              hospitals={hospitals}
+            />
           )}
 
         </div>
@@ -982,7 +1056,9 @@ function OrganisationAdmin({
 
   function addHospital(
     name: string,
-    countryId: string
+    countryId: string,
+    latitude?: number,
+    longitude?: number
   ) {
 
     setHospitals((current) => [
@@ -996,6 +1072,10 @@ function OrganisationAdmin({
         name,
 
         countryId,
+
+        latitude,
+
+        longitude,
       },
 
     ]);
@@ -1259,7 +1339,7 @@ function OrganisationAdmin({
 }
 
 
-/* COUNTRY FORM */
+/* ORGANISATION FORM */
 
 function OrganisationForm({
   type,
@@ -1288,7 +1368,9 @@ function OrganisationForm({
 
   onHospital: (
     name: string,
-    countryId: string
+    countryId: string,
+    latitude?: number,
+    longitude?: number
   ) => void;
 
   onDepartment: (
@@ -1321,6 +1403,25 @@ function OrganisationForm({
   const [
     departmentId,
     setDepartmentId,
+  ] = useState("");
+
+  const [
+    latitude,
+    setLatitude,
+  ] = useState<number | "">(
+    ""
+  );
+
+  const [
+    longitude,
+    setLongitude,
+  ] = useState<number | "">(
+    ""
+  );
+
+  const [
+    googleMapsUrl,
+    setGoogleMapsUrl,
   ] = useState("");
 
 
@@ -1357,7 +1458,13 @@ function OrganisationForm({
 
       onHospital(
         name,
-        countryId
+        countryId,
+        latitude !== ""
+          ? latitude
+          : undefined,
+        longitude !== ""
+          ? longitude
+          : undefined
       );
 
       return;
@@ -1491,48 +1598,178 @@ function OrganisationForm({
           {type ===
             "hospitals" && (
 
-            <div className="form-group">
+            <>
 
-              <label>
-                Country
-              </label>
+              <div className="form-group">
 
-              <select
-                value={countryId}
-                onChange={(e) =>
-                  setCountryId(
-                    e.target.value
-                  )
-                }
+                <label>
+                  Country
+                </label>
 
-                required
-              >
+                <select
+                  value={countryId}
+                  onChange={(e) =>
+                    setCountryId(
+                      e.target.value
+                    )
+                  }
 
-                <option value="">
-                  Select country
-                </option>
+                  required
+                >
 
-                {countries.map(
-                  (country) => (
+                  <option value="">
+                    Select country
+                  </option>
 
-                    <option
-                      key={
-                        country.id
-                      }
+                  {countries.map(
+                    (country) => (
 
-                      value={
-                        country.id
-                      }
-                    >
-                      {country.name}
-                    </option>
+                      <option
+                        key={
+                          country.id
+                        }
 
-                  )
-                )}
+                        value={
+                          country.id
+                        }
+                      >
+                        {country.name}
+                      </option>
 
-              </select>
+                    )
+                  )}
 
-            </div>
+                </select>
+
+              </div>
+
+
+              <div className="form-group">
+
+                <label>
+                  Geographic
+                  Location (Optional)
+                </label>
+
+                <div className="geo-instructions">
+
+                  <strong>To add coordinates:</strong>
+                  <br />
+                  1. Copy the hospital name above
+                  <br />
+                  2. Search for it in{" "}
+                  <a
+                    href="https://maps.google.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Google Maps
+                  </a>
+                  <br />
+                  3. Click on the location pin
+                  <br />
+                  4. Copy the latitude &amp; longitude
+                  <br />
+                  5. Paste the coordinates below
+
+                </div>
+
+              </div>
+
+
+              <div className="form-group">
+
+                <label>
+                  Google Maps URL (Optional)
+                </label>
+
+                <input
+                  type="url"
+                  value={googleMapsUrl}
+                  onChange={(e) =>
+                    setGoogleMapsUrl(
+                      e.target.value
+                    )
+                  }
+
+                  placeholder="https://maps.google.com/..."
+                />
+
+              </div>
+
+
+              <div className="geo-inputs">
+
+                <div className="form-group">
+
+                  <label>
+                    Latitude
+                  </label>
+
+                  <input
+                    type="number"
+                    step="0.000001"
+                    value={latitude}
+                    onChange={(e) =>
+                      setLatitude(
+                        e.target
+                          .value === ""
+                          ? ""
+                          : parseFloat(
+                              e.target
+                                .value
+                            )
+                      )
+                    }
+
+                    placeholder="e.g. -33.9249"
+                  />
+
+                </div>
+
+                <div className="form-group">
+
+                  <label>
+                    Longitude
+                  </label>
+
+                  <input
+                    type="number"
+                    step="0.000001"
+                    value={longitude}
+                    onChange={(e) =>
+                      setLongitude(
+                        e.target
+                          .value === ""
+                          ? ""
+                          : parseFloat(
+                              e.target
+                                .value
+                            )
+                      )
+                    }
+
+                    placeholder="e.g. 18.4241"
+                  />
+
+                </div>
+
+              </div>
+
+
+              {latitude !== "" &&
+                longitude !== "" && (
+
+                <div className="location-badge">
+
+                  ✓ Location captured:{" "}
+                  {latitude}, {longitude}
+
+                </div>
+
+              )}
+
+            </>
 
           )}
 
@@ -1792,6 +2029,10 @@ function HospitalTable({
             </th>
 
             <th>
+              Location
+            </th>
+
+            <th>
               Actions
             </th>
           </tr>
@@ -1825,6 +2066,37 @@ function HospitalTable({
                   <td>
                     {country?.name ??
                       "Unknown"}
+                  </td>
+
+                  <td>
+                    {hospital
+                      .latitude &&
+                    hospital
+                      .longitude ? (
+                      <span className="location-badge">
+                        📍{" "}
+                        {hospital
+                          .latitude
+                          .toFixed(
+                            4
+                          )}
+                        ,{" "}
+                        {hospital
+                          .longitude
+                          .toFixed(
+                            4
+                          )}
+                      </span>
+                    ) : (
+                      <span
+                        style={{
+                          color:
+                            "#999",
+                        }}
+                      >
+                        Not set
+                      </span>
+                    )}
                   </td>
 
                   <td>
@@ -2159,7 +2431,18 @@ function Validation() {
 }
 
 
-function Analytics() {
+function Analytics({
+  hospitals,
+}: {
+  hospitals: Hospital[];
+}) {
+
+  const hospitalsWithLocation =
+    hospitals.filter(
+      (h) =>
+        h.latitude &&
+        h.longitude
+    );
 
   return (
     <>
@@ -2198,13 +2481,94 @@ function Analytics() {
 
       <div className="card">
 
-        <EmptyState
-          title="Analytics will appear here"
-          text="Once data collection is connected to the database, dashboards will be populated automatically."
-        />
+        <div className="card-title">
+          Hospital Locations
+        </div>
+
+        {hospitalsWithLocation
+          .length > 0 ? (
+
+          <>
+
+            <p style={{ fontSize: "14px" }}>
+              {
+                hospitalsWithLocation
+                  .length
+              }{" "}
+              hospitals have
+              location data.
+            </p>
+
+            <div className="map-container">
+
+              📍 Map visualization
+              will display{" "}
+              {
+                hospitalsWithLocation
+                  .length
+              }{" "}
+              hospitals here
+              (integrate Google Maps or
+              Mapbox API)
+
+            </div>
+
+            <div
+              style={{
+                fontSize: "13px",
+
+                color: "#666",
+
+                padding: "10px",
+
+                backgroundColor:
+                  "#f9f9f9",
+
+                borderRadius: "6px",
+              }}
+            >
+
+              <strong>Hospitals with coordinates:</strong>
+              <ul
+                style={{
+                  margin:
+                    "10px 0 0 20px",
+
+                  padding: 0,
+                }}
+              >
+
+                {
+                  hospitalsWithLocation.map(
+                    (h) => (
+
+                      <li key={h.id}>
+
+                        {h.name} -{" "}
+                        {h.latitude}, {h.longitude}
+
+                      </li>
+
+                    )
+                  )
+                }
+
+              </ul>
+
+            </div>
+
+          </>
+
+        ) : (
+
+          <EmptyState
+            title="No hospital locations recorded"
+            text="Add hospital coordinates from the Organisation section to display them on the map."
+          />
+
+        )}
 
       </div>
-
     </>
   );
 }
