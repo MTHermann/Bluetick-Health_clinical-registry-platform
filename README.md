@@ -534,9 +534,15 @@ export default function ClinicalRegistry() {
 
           padding: 6px 8px;
 
-          font-size: 12px;
+          font-size: 11px;
 
           color: #1a5f7f;
+
+          word-break: break-all;
+
+          font-family: 'Courier New', monospace;
+
+          line-height: 1.4;
         }
 
         .map-container {
@@ -1703,12 +1709,12 @@ function OrganisationForm({
                 <div className="form-group">
 
                   <label>
-                    Latitude
+                    Latitude (15-20 decimals)
                   </label>
 
                   <input
                     type="number"
-                    step="0.000001"
+                    step="any"
                     value={latitude}
                     onChange={(e) =>
                       setLatitude(
@@ -1722,7 +1728,7 @@ function OrganisationForm({
                       )
                     }
 
-                    placeholder="e.g. -33.9249"
+                    placeholder="e.g. -33.924901234567890"
                   />
 
                 </div>
@@ -1730,12 +1736,12 @@ function OrganisationForm({
                 <div className="form-group">
 
                   <label>
-                    Longitude
+                    Longitude (15-20 decimals)
                   </label>
 
                   <input
                     type="number"
-                    step="0.000001"
+                    step="any"
                     value={longitude}
                     onChange={(e) =>
                       setLongitude(
@@ -1749,7 +1755,7 @@ function OrganisationForm({
                       )
                     }
 
-                    placeholder="e.g. 18.4241"
+                    placeholder="e.g. 18.424105678901234"
                   />
 
                 </div>
@@ -1762,8 +1768,11 @@ function OrganisationForm({
 
                 <div className="location-badge">
 
-                  ✓ Location captured:{" "}
-                  {latitude}, {longitude}
+                  ✓ Location captured:
+                  <br />
+                  Lat: {latitude}
+                  <br />
+                  Lng: {longitude}
 
                 </div>
 
@@ -2074,18 +2083,11 @@ function HospitalTable({
                     hospital
                       .longitude ? (
                       <span className="location-badge">
-                        📍{" "}
-                        {hospital
-                          .latitude
-                          .toFixed(
-                            4
-                          )}
-                        ,{" "}
-                        {hospital
-                          .longitude
-                          .toFixed(
-                            4
-                          )}
+                        📍 Lat: {hospital
+                          .latitude}
+                        <br />
+                        Lng: {hospital
+                          .longitude}
                       </span>
                     ) : (
                       <span
@@ -2515,7 +2517,7 @@ function Analytics({
 
             <div
               style={{
-                fontSize: "13px",
+                fontSize: "12px",
 
                 color: "#666",
 
@@ -2535,6 +2537,11 @@ function Analytics({
                     "10px 0 0 20px",
 
                   padding: 0,
+
+                  fontFamily:
+                    "'Courier New', monospace",
+
+                  lineHeight: 1.6,
                 }}
               >
 
@@ -2544,8 +2551,11 @@ function Analytics({
 
                       <li key={h.id}>
 
-                        {h.name} -{" "}
-                        {h.latitude}, {h.longitude}
+                        <strong>{h.name}</strong>
+                        <br />
+                        Lat: {h.latitude}
+                        <br />
+                        Lng: {h.longitude}
 
                       </li>
 
