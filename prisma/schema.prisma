@@ -1,0 +1,108 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  DATA_MANAGER
+  VALIDATOR
+  VIEWER
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String?
+  email     String   @unique
+  password  String
+  role      Role     @default(VIEWER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Country {
+  id        String     @id @default(cuid())
+  name      String
+  code      String     @unique
+  hospitals Hospital[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model Hospital {
+  id          String       @id @default(cuid())
+  name        String
+  countryId   String
+  country     Country      @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  latitude    Float?
+  longitude   Float?
+  departments Department[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Department {
+  id         String   @id @default(cuid())
+  name       String
+  hospitalId String
+  hospital   Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  icus       ICU[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model ICU {
+  id           String     @id @default(cuid())
+  name         String
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  patients     Patient[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model Patient {
+  id          String     @id @default(cuid())
+  mrn         String     @unique
+  firstName   String
+  lastName    String
+  dateOfBirth DateTime
+  gender      String
+  icuId       String?
+  icu         ICU?       @relation(fields: [icuId], references: [id])
+  forms       DataForm[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model DataForm {
+  id          String           @id @default(cuid())
+  title       String
+  patientId   String
+  patient     Patient          @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  status      FormStatus       @default(DRAFT)
+  data        Json             @default("{}")
+  validations FormValidation[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+enum FormStatus {
+  DRAFT
+  SUBMITTED
+  VALIDATED
+  REJECTED
+}
+
+model FormValidation {
+  id        String     @id @default(cuid())
+  formId    String
+  form      DataForm   @relation(fields: [formId], references: [id], onDelete: Cascade)
+  status    FormStatus
+  notes     String?
+  createdAt DateTime   @default(now())
+}
