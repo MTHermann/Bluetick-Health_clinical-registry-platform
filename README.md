@@ -1,4 +1,4 @@
-# Bluetick Health — Clinical Registry Platform
+# Bluetick Health EMR
 
 Scalable clinical registry, data collection, validation and analytics platform.
 
